@@ -24,6 +24,7 @@
 
 #include "ParameterList.hpp"
 #include "ParameterSerializer.hpp"
+#include <cstring>
 
 namespace eprosima {
 namespace fastdds {
@@ -171,6 +172,17 @@ bool ParameterList::readInstanceHandleFromCDRMsg(
     // Only process data when change does not already have a handle
     if (change->instanceHandle.isDefined())
     {
+        return true;
+    }
+
+    if (change->serializedPayload.is_serialized_key)
+    {
+        if (change->serializedPayload.length > PARAMETER_KEY_HASH_LENGTH)
+        {
+            return false;
+        }
+
+        memcpy(change->instanceHandle.value, change->serializedPayload.data, change->serializedPayload.length);
         return true;
     }
 
