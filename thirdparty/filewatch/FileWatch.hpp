@@ -399,12 +399,16 @@ namespace filewatch {
                     _WIN32_FILE_ATTRIBUTE_DATA att;
                     GetFileAttributesExA(_path.c_str(), GetFileExInfoStandard, &att);
 
+                    ULARGE_INTEGER uli;
+                    memcpy(&uli, &att.ftLastWriteTime, sizeof(ULARGE_INTEGER));
+
                     unsigned long current_size = att.nFileSizeLow;
                     auto current_time = base_.second
                         + std::chrono::duration<
                                 typename std::chrono::time_point<std::chrono::system_clock>::rep,
                                 std::ratio_multiply<std::hecto, typename std::chrono::nanoseconds::period>>(
-                                    reinterpret_cast<ULARGE_INTEGER*>(&att.ftLastWriteTime)->QuadPart - base_.first.QuadPart);
+                                    uli.QuadPart - base_.first.QuadPart
+                                );
 
                     if (bytes_returned == 0 || ((current_time == last_write_time_) && current_size == last_size_ )) {
                         break;
@@ -601,11 +605,15 @@ namespace filewatch {
             _WIN32_FILE_ATTRIBUTE_DATA att;
             GetFileAttributesExA(_path.c_str(), GetFileExInfoStandard, &att);
 
+            ULARGE_INTEGER uli;
+            memcpy(&uli, &att.ftLastWriteTime, sizeof(ULARGE_INTEGER));
+
             last_write_time_ = base_.second
                 + std::chrono::duration<
                         typename std::chrono::time_point<std::chrono::system_clock>::rep,
                         std::ratio_multiply<std::hecto, typename std::chrono::nanoseconds::period>>(
-                            reinterpret_cast<ULARGE_INTEGER*>(&att.ftLastWriteTime)->QuadPart - base_.first.QuadPart);
+                            uli.QuadPart - base_.first.QuadPart
+                        );
 
             // Initialize filesize
             last_size_ = att.nFileSizeLow;

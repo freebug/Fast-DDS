@@ -524,6 +524,30 @@ void XMLProfileManager::getDefaultTopicAttributes(
     topic_attributes = default_topic_attributes;
 }
 
+// current version of compiler does not support getenv_s
+// workaround:
+static int getenv_s(
+    size_t *pReturnValue,
+    char *buffer,
+    size_t numberOfElements,
+    const char *varname)
+{
+    if (pReturnValue == nullptr || buffer == nullptr || varname == nullptr)
+    {
+        return -1;
+    }
+
+    const char *value = getenv(varname);
+    if (value == nullptr)
+    {
+        return -1;
+    }
+
+    *pReturnValue = strlen(value);
+    strcpy_s(buffer, numberOfElements, value);
+    return 0;
+}
+
 void XMLProfileManager::loadDefaultXMLFile()
 {
     // Try to load the default XML file set with an environment variable.

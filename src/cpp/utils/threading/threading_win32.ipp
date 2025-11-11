@@ -18,6 +18,33 @@
 #include <string>
 #include <processthreadsapi.h>
 
+// 确保定义了 SetThreadDescription 函数
+#if !defined(SetThreadDescription)
+// 声明 SetThreadDescription 函数原型
+HRESULT WINAPI SetThreadDescription(
+    _In_ HANDLE ThreadHandle,
+    _In_ PCWSTR ThreadDescription
+    )
+{
+    // 动态加载SetThreadDescription函数
+    HMODULE hModule = LoadLibraryW(L"kernelbase.dll");
+    if (hModule)
+    {
+        typedef HRESULT(WINAPI *SetThreadDescriptionFunc)(HANDLE, PCWSTR);
+        SetThreadDescriptionFunc pSetThreadDescription = 
+            (SetThreadDescriptionFunc)GetProcAddress(hModule, "SetThreadDescription");
+        
+        if (pSetThreadDescription)
+        {
+            pSetThreadDescription(ThreadHandle, ThreadDescription);
+        }
+        
+        FreeLibrary(hModule);
+    }
+    return S_OK;
+}
+#endif // !defined(SetThreadDescription)
+
 #include <fastdds/rtps/attributes/ThreadSettings.hpp>
 #include <utils/threading/thread_logging.hpp>
 
